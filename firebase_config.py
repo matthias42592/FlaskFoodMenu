@@ -1,17 +1,16 @@
 import os
-import firebase_admin
-from firebase_admin import credentials, db
 import json
+from firebase_admin import credentials, initialize_app, db
 
-# 🔐 Lade den Schlüssel aus einer Umgebungsvariable
-firebase_key = os.environ.get("FIREBASE_KEY_JSON")
+# Lade den JSON-String aus der Umgebungsvariable
+firebase_key_str = os.environ.get("FIREBASE_KEY")
 
-if firebase_key:
-    key_dict = json.loads(firebase_key)
-    cred = credentials.Certificate(key_dict)
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': "https://foodmenu-d3081-default-rtdb.europe-west1.firebasedatabase.app"
-    })
-    database = db.reference()
-else:
-    raise Exception("FIREBASE_KEY_JSON not set!")
+# Wandle ihn in ein Python-Objekt um
+firebase_key_dict = json.loads(firebase_key_str)
+
+cred = credentials.Certificate(firebase_key_dict)
+initialize_app(cred, {
+    'databaseURL': 'https://foodmenu-d3081-default-rtdb.europe-west1.firebasedatabase.app/'
+})
+
+database = db
