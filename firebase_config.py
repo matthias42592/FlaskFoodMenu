@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, db
 import json
 
-# 🔐 Lade den Schlüssel aus einer Umgebungsvariablen
+# 🔐 Lade den Schlüssel aus einer Umgebungsvariable
 firebase_key = os.environ.get("FIREBASE_KEY_JSON")
 
 if firebase_key:
