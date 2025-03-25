@@ -1,0 +1,38 @@
+# Logs
+logs/
+*.log
+firebase-debug.log*
+firebase-debug.*.log*
+
+# Firebase cache
+.firebase/
+
+# Firebase config (sensible Daten, nicht hochladen!)
+firebase-key.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtuelle Umgebungen (falls du eine nutzt)
+venv/
+env/
+
+# Coverage- und Testdateien
+.coverage
+htmlcov/
+coverage/
+.nyc_output/
+
+# IDE- und Editor-Dateien
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sonstiges
+*.pid
+*.seed
+*.pid.lock

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wochenplan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #ffcc00;
+        }
+
+        a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .wochenplan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 15px;
+            margin: 10px auto;
+            border-radius: 10px;
+            width: 80%;
+        }
+
+        .wochenplan-info {
+            font-size: 1.2em;
+        }
+
+        .delete-button {
+            background: none;
+            border: none;
+            color: #ff4444;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            color: #ff7777;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📅 Wochenplan</h1>
+    <a href="/">🔙 Zurück</a>
+
+    <h2>Geplante Gerichte:</h2>
+    <ul id="wochenplan-liste">
+        {% for plan in wochenplan %}
+        <li class="wochenplan-item">
+            <div class="wochenplan-info">
+                <strong>{{ plan.datum }}:</strong> {{ plan.gericht }}
+            </div>
+            <button class="delete-button" onclick="confirmDelete('{{ plan.id }}')">🗑️</button>
+        </li>
+        {% else %}
+        <li>Keine Gerichte im Wochenplan gefunden.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Einkaufsliste:</h2>
+    <ul>
+        {% for item in einkaufsliste %}
+        <li class="wochenplan-item">
+            <strong>{{ item.zutat }}:</strong> {{ item.menge }}
+        </li>
+        {% else %}
+        <li>Keine Zutaten in der Einkaufsliste.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Kalenderansicht</h2>
+    <div id="kalender-wochen"></div>
+    
+    <section>
+        <h2>Wochenplan</h2>
+        <div id="kalender-wochen" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 20px;"></div>
+      </section>
+      
+
+    <script>
+        function confirmDelete(gerichtId) {
+            let removeIngredients = confirm("Möchtest du dieses Gericht auch aus der Einkaufsliste entfernen?");
+            let url = `/delete_from_plan/${gerichtId}?remove_ingredients=${removeIngredients}`;
+
+            fetch(url, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();  // Wochenplan neu laden
+            })
+            .catch(error => console.error("Fehler beim Löschen:", error));
+        }
+    </script>
+
+</body>
+</html>

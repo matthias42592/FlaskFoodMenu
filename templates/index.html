@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essensplanung</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-style.css') }}">
+
+</head>
+<body>
+
+    <h1>🍽 Essensplanung</h1>
+    
+    <nav>
+        <a href="/wochenplan">📆 Wochenplan</a>
+        <a href="/einkaufsliste">🛒 Einkaufsliste</a>
+        <a href="#" onclick="openAddForm()">➕ Neues Gericht</a>
+    </nav>
+
+    <div id="gerichte-liste">
+        {% for gericht in gerichte %}
+        <a href="/gericht/{{ gericht.id }}" class="gericht-link">
+            <div class="gericht">
+                <div class="gericht-info">
+                    <div class="gericht-name">{{ gericht.name }}</div>
+                    <div class="gericht-zutaten">
+                        {% if gericht.hauptzutaten %}
+                            • {{ gericht.hauptzutaten[0] }}<br>
+                            • {{ gericht.hauptzutaten[1] if gericht.hauptzutaten|length > 1 else '' }}
+                        {% endif %}
+                    </div>
+                </div>
+                <img class="gericht-bild" src="{{ gericht.bild_url or 'https://via.placeholder.com/80' }}" alt="{{ gericht.name }}">
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    
+    
+
+    <div id="add-form" style="display: none;">
+        <h2>Neues Gericht hinzufügen</h2>
+        <form id="gericht-form">
+            <label>Name:</label>
+            <input type="text" id="name" required><br>
+    
+            <label>Hauptzutat 1:</label>
+            <input type="text" id="hauptzutat_1" required><br>
+    
+            <label>Hauptzutat 2:</label>
+            <input type="text" id="hauptzutat_2" required><br>
+    
+            <label>Nebenzutaten:</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="nebenzutat">
+                <button type="button" class="plus-button" onclick="addNebenzutat()">➕</button>
+            </div>
+    
+            <ul id="nebenzutaten-liste"></ul>
+    
+            <label>Bild-URL:</label>
+            <input type="text" id="bild_url"><br>
+    
+            <button type="button" onclick="addGericht()">Hinzufügen</button>
+            <button type="button" onclick="closeAddForm()">Abbrechen</button>
+        </form>
+    </div>
+    
+    
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

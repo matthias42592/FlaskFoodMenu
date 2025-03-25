@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ gericht.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-style.css') }}">
+    <style>
+        body {
+            text-align: center;
+        }
+
+        #kalender-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .kalender-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            width: 80%;
+            text-align: center;
+        }
+
+        .kalender-header {
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .kalender-tag {
+            padding: 15px;
+            background-color: #222;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .gruen-punkt {
+            width: 10px;
+            height: 10px;
+            background-color: green;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .zutaten-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .zutaten-block {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .edit-button {
+            background-color: #ffcc00;
+            color: #121212;
+        }
+
+        .delete-button {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #edit-form {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            width: 60%;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        input, textarea {
+            width: 90%;
+            padding: 10px;
+            margin-top: 5px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>{{ gericht.name }}</h1>
+    <img src="{{ gericht.bild_url or 'https://via.placeholder.com/200' }}" alt="{{ gericht.name }}" width="200">
+    
+    <div class="button-container">
+        <button class="button edit-button">✏️ Bearbeiten</button>
+        <button class="button delete-button" onclick="confirmDelete('{{ gericht.id }}')">🗑️ Löschen</button>
+    </div>
+    
+    <!-- Bearbeitungsformular -->
+    <div id="edit-form" class="hidden">
+        <h2>Gericht bearbeiten</h2>
+        <label>Neuer Name:</label>
+        <input type="text" id="edit-name" value="{{ gericht.name }}">
+
+        <label>Bild-URL:</label>
+        <input type="text" id="edit-bild" value="{{ gericht.bild_url }}">
+
+        <label>Hauptzutaten:</label>
+        <textarea id="edit-hauptzutaten">{{ ', '.join(gericht.hauptzutaten) }}</textarea>
+
+        <label>Nebenzutaten:</label>
+        <textarea id="edit-nebenzutaten">{{ ', '.join(gericht.nebenzutaten) }}</textarea>
+
+        <button class="button edit-button" onclick="saveChanges('{{ gericht.id }}')">💾 Speichern</button>
+    </div>
+
+    <div class="zutaten-container">
+        <div class="zutaten-block">
+            <h2>Hauptzutaten</h2>
+            <ul>
+                {% for zutat in gericht.hauptzutaten %}
+                    <li>{{ zutat }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="zutaten-block">
+            <h2>Nebenzutaten</h2>
+            <ul>
+                {% for zutat in gericht.nebenzutaten %}
+                    <li>{{ zutat }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <h2>Zum Wochenplan hinzufügen</h2>
+    <div id="kalender-container">
+        <div class="kalender-grid" id="kalender-wochen"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch("/wochenplan_api")
+            .then(response => response.json())
+            .then(data => {
+                renderKalender(data);
+            });
+        });
+
+function renderKalender(wochenplan) {
+    const kalender = document.getElementById("kalender-wochen");
+    kalender.innerHTML = "";
+    let today = new Date();
+    const wochenTage = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+    let startDay = today.getDay();
+    if (startDay === 0) startDay = 7;
+    let offset = startDay - 1;
+
+    // Wochentage anzeigen
+    wochenTage.forEach(tag => {
+        let th = document.createElement("div");
+        th.className = "kalender-header";
+        th.textContent = tag;
+        kalender.appendChild(th);
+    });
+
+    // Tage der nächsten 2 Wochen anzeigen
+    for (let i = -offset; i < 14 - offset; i++) {
+        let date = new Date();
+        date.setDate(today.getDate() + i);
+        let dateStr = date.toISOString().split('T')[0];
+
+        let tag = document.createElement("div");
+        tag.className = "kalender-tag";
+        tag.textContent = date.getDate() + "." + (date.getMonth() + 1).toString().padStart(2, '0');
+
+        // ✅ Suche geplantes Gericht für dieses Datum
+        let eintrag = wochenplan.find(item => item.datum === dateStr);
+
+    if (eintrag) {
+        let punkt = document.createElement("span");
+        punkt.className = "gruen-punkt";
+        tag.appendChild(punkt);
+
+        tag.onclick = function (event) {
+            event.preventDefault();  // falls doch was mit Link im Spiel ist
+            alert("Für diesen Tag ist geplant: " + eintrag.gericht);
+        };
+    }
+    else {
+            // Kein Eintrag: Möglichkeit zum Hinzufügen des aktuellen Gerichts
+            tag.onclick = function () {
+                if (confirm("Möchtest du {{ gericht.name }} für den " + dateStr + " hinzufügen?")) {
+                    addToPlan(dateStr);
+                }
+            };
+        }
+
+        kalender.appendChild(tag);
+    }
+}
+
+
+// Bearbeiten-Button
+document.addEventListener("DOMContentLoaded", function() {
+    let editButton = document.querySelector(".edit-button");
+    if (editButton) {
+        editButton.addEventListener("click", function() {
+            console.log("Bearbeiten-Button wurde geklickt! ✅");
+            toggleEdit();  // Öffnet das Bearbeitungsformular
+        });
+    }
+});
+
+// Bearbeiten-Funktion
+function toggleEdit() {
+    console.log("toggleEdit() wurde aufgerufen! ✅");
+    let form = document.getElementById("edit-form");
+    if (!form) {
+        console.error("Bearbeiten-Formular nicht gefunden! ❌");
+        return;
+    }
+
+    // Sichtbarkeit des Bearbeitungsformulars steuern
+    if (form.classList.contains("hidden")) {
+        form.classList.remove("hidden");
+    } else {
+        form.classList.add("hidden");
+    }
+    console.log("Formular sichtbar:", !form.classList.contains("hidden"));
+}
+
+// Speichern der Änderungen in der Datenbank
+function saveChanges(gerichtId) {
+    const updatedData = {
+        name: document.getElementById("edit-name").value,
+        bild_url: document.getElementById("edit-bild").value,
+        hauptzutaten: document.getElementById("edit-hauptzutaten").value.split(",").map(zutat => zutat.trim()),
+        nebenzutaten: document.getElementById("edit-nebenzutaten").value.split(",").map(zutat => zutat.trim())
+    };
+
+    fetch(`/edit_gericht/${gerichtId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Gericht aktualisiert:", data);
+        alert(data.message);
+        location.reload();  // Seite neu laden, um die Änderungen zu sehen
+    })
+    .catch(error => {
+        console.error("Fehler beim Speichern der Änderungen:", error);
+        alert("Fehler beim Bearbeiten des Gerichts!");
+    });
+}
+
+// Löschen-Funktion
+function confirmDelete(gerichtId) {
+    if (confirm("Möchtest du dieses Gericht wirklich löschen?")) {
+        fetch(`/delete_gericht/${gerichtId}`, { method: "DELETE" })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            window.location.href = "/";  // Nach dem Löschen zurück zur Startseite
+        })
+        .catch(error => {
+            console.error("Fehler beim Löschen:", error);
+            alert("Fehler beim Löschen des Gerichts!");
+        });
+    }
+}
+
+        // Gericht zum Wochenplan hinzufügen
+        function addToPlan(date) {
+            console.log("Füge Gericht hinzu:", date);
+            
+            const gerichtName = "{{ gericht.name }}"; // Gerichtname aus Template
+            const datum = date; // Datum des Klicks
+
+            // Hier wird die POST-Anfrage an die Flask-Route gesendet
+            fetch("/add_to_plan", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            body: JSON.stringify({
+                id: "{{ gericht.id }}",  // ✅ übergebe die ID
+                datum: datum,
+                gericht: gerichtName,
+                hauptzutaten: {{ gericht.hauptzutaten | tojson }},
+                nebenzutaten: {{ gericht.nebenzutaten | tojson }}
+            }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Gericht hinzugefügt:", data);
+                alert("Gericht zum Wochenplan hinzugefügt!");
+            })
+            .catch(error => {
+                console.error("Fehler beim Hinzufügen zum Wochenplan:", error);
+                alert("Fehler beim Hinzufügen des Gerichts!");
+            });
+        }
+    </script>
+
+<a href="/" class="button" style="display: block; margin-top: 20px;">⬅ Zurück</a>
+
+</body>
+</html>

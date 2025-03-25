@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einkaufsliste</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #ffcc00;
+        }
+
+        a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .einkaufsliste-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 15px;
+            margin: 10px auto;
+            border-radius: 10px;
+            width: 80%;
+        }
+
+        .einkaufsliste-info {
+            font-size: 1.2em;
+        }
+
+        .delete-button {
+            background: none;
+            border: none;
+            color: #ff4444;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            color: #ff7777;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛒 Einkaufsliste</h1>
+    <a href="/">🔙 Zurück</a>
+
+    <h2>Deine Zutaten:</h2>
+    <ul id="einkaufsliste-liste">
+        {% for item in einkaufsliste %}
+        <li class="einkaufsliste-item">
+            <div class="einkaufsliste-info">
+                <strong>{{ item.zutat }}:</strong> {{ item.menge }}
+            </div>
+            <button class="delete-button" onclick="confirmDelete('{{ item.id }}')">🗑️</button>
+        </li>
+        {% else %}
+        <li>Keine Zutaten in der Einkaufsliste.</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        function confirmDelete(zutatId) {
+            let url = `/delete_zutat/${zutatId}`;
+
+            fetch(url, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();  // Einkaufsliste neu laden
+            })
+            .catch(error => console.error("Fehler beim Löschen:", error));
+        }
+    </script>
+
+</body>
+</html>

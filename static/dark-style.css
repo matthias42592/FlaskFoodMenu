@@ -1,0 +1,142 @@
+/* 🌙 Dunkles, modernes Design für die Startseite mit verbessertem Formular */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #ff9800;
+}
+
+/* Gericht-Karte */
+.gericht {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.gericht-info {
+    flex: 1;
+}
+
+.gericht-name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ff9800;
+}
+
+.gericht-zutaten {
+    font-size: 1rem;
+    margin-top: 5px;
+    color: #cccccc;
+}
+
+.gericht-bild {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Formular Styling */
+#gericht-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+#gericht-form input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+#nebenzutaten-liste {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#nebenzutaten-liste li {
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.plus-button {
+    background-color: #ff9800;
+    color: #121212;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.remove-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* Mobile Optimierung */
+@media (max-width: 600px) {
+    .gericht {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .gericht-bild {
+        width: 100%;
+        height: auto;
+        margin-top: 10px;
+    }
+}
+.gruen-punkt {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: green;
+    border-radius: 50%;
+    margin-left: 8px;
+}
+.kalender-header {
+    text-align: center;
+    font-weight: bold;
+    color: #ff9800;
+    padding: 5px;
+}
+
+.kalender-tag {
+    text-align: center;
+    padding: 10px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+}
