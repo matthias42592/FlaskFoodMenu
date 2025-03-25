@@ -1,7 +1,11 @@
+print("🚀 app.py wird gestartet")
+
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from firebase_config import database  # Import der Firebase-Verbindung
 from datetime import date
 from collections import defaultdict
+
+print("✅ Firebase-Verbindung importiert")  # ← direkt danach
 
 app = Flask(__name__)
 
