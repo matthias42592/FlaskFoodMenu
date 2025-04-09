@@ -1,9 +1,25 @@
 function openAddForm() {
-    document.getElementById("add-form").style.display = "block";
+    const form = document.getElementById("add-form");
+    form.style.display = "block";
+
+    // Scrolle sanft zu diesem Formularbereich
+    form.scrollIntoView({ behavior: "smooth" });
 }
 
-function closeAddForm() {
-    document.getElementById("add-form").style.display = "none";
+function clearForm() {
+    document.getElementById("name").value = "";
+    document.getElementById("hauptzutat_1").value = "";
+    document.getElementById("hauptzutat_2").value = "";
+    document.getElementById("bild_url").value = "";
+    document.getElementById("nebenzutat").value = "";
+    nebenzutaten = [];
+    updateNebenzutatenListe();
+
+    const form = document.getElementById("gericht-form");
+    form.style.display = "none";
+
+    // Scrolle zurück nach oben
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // Gericht zum Wochenplan hinzufügen

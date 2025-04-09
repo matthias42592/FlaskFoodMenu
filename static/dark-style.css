@@ -1,4 +1,4 @@
-/* 🌙 Dunkles, modernes Design für die Startseite mit verbessertem Formular */
+/* 🌙 Dunkles, modernes Design für die App */
 
 body {
     font-family: Arial, sans-serif;
@@ -8,36 +8,52 @@ body {
     padding: 20px;
 }
 
-/* Hauptüberschrift */
+/* Hauptüberschrift fixieren */
 h1 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #1e1e1e; /* Hintergrundfarbe passend zum Dark Mode */
+    color: #ffa726; /* Orange als Akzentfarbe */
     text-align: center;
-    color: #ffa726;
     font-size: 2.4rem;
     letter-spacing: 1px;
-    margin-bottom: 20px;
+    padding: 10px 0;
+    margin: 0;
+    z-index: 1000; /* Sicherstellen, dass es über anderen Elementen bleibt */
 }
 
-/* Unterüberschriften */
-h2, h3 {
-    color: #f0f0f0;
-    font-weight: 500;
-    margin-top: 30px;
-    margin-bottom: 10px;
+/* Navigation fixieren */
+nav {
+    position: fixed;
+    top: 60px; /* Direkt unter der Überschrift */
+    left: 0;
+    width: 100%;
+    background-color: #1e1e1e; /* Hintergrundfarbe passend zum Dark Mode */
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px 0;
+    z-index: 999; /* Sicherstellen, dass es über anderen Elementen bleibt */
 }
 
-/* 🟠 Link-Farben (Verhindert lila besuchte Links!) */
-a {
-    color: #ffa726;
+/* Links in der Navigation */
+nav a {
     text-decoration: none;
+    background-color: #ffa726; /* Orange als Akzentfarbe */
+    color: #121212; /* Kontrastreiche Schriftfarbe */
+    padding: 10px 15px;
+    border-radius: 5px;
 }
 
-a:hover {
-    color: #ffcc80;
-    text-decoration: underline;
+nav a:hover {
+    background-color: #ffcc80; /* Hellere Orange beim Hover */
 }
 
-a:visited {
-    color: #ffa726;
+/* Abstand für den Hauptinhalt (wegen fixierter Überschrift und Navigation) */
+main {
+    margin-top: 120px; /* Platz für Überschrift und Navigation */
 }
 
 /* Gericht-Karte */
@@ -59,20 +75,11 @@ a:visited {
 .gericht-name {
     font-size: 1.4rem;
     font-weight: bold;
-    color: #ffffff; /* war vorher orange */
 }
 
 .gericht-zutaten {
     font-size: 1rem;
     margin-top: 5px;
-    color: #cccccc;
-}
-
-.gericht-bild {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
 }
 
 /* Formular Styling */
@@ -84,91 +91,29 @@ a:visited {
     background-color: #1e1e1e;
     padding: 20px;
     border-radius: 10px;
-    max-width: 400px;
-    margin: auto;
 }
 
 #gericht-form input {
     width: 100%;
     padding: 10px;
-    border-radius: 5px;
-    border: none;
 }
 
 /* Nebenzutaten Liste */
 #nebenzutaten-liste {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#nebenzutaten-liste li {
-    background-color: #333;
-    padding: 5px 10px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-}
-
-.plus-button {
-    background-color: #ffa726;
-    color: #121212;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.remove-button {
-    background-color: rgb(184, 62, 62);
-    color: white;
-    border: none;
-    padding: 5px 8px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-/* Mobile Optimierung */
-@media (max-width: 600px) {
-    .gericht {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .gericht-bild {
-        width: 100%;
-        height: auto;
-        margin-top: 10px;
-    }
-}
-
-/* Grüner Punkt im Kalender */
-.gruen-punkt {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background-color: green;
-    border-radius: 50%;
-    margin-left: 8px;
+    list-style-type: none; /* Keine Bulletpoints */
 }
 
 /* Kalender */
 .kalender-header {
     text-align: center;
-    font-weight: bold;
-    color: #ffa726;
-    padding: 5px;
 }
 
 .kalender-tag {
-    text-align: center;
-    padding: 10px;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #fff;
+   text-align:center
+}
+
+#einkaufsliste-liste {
+    margin: 0 auto;
+    max-width: 600px;
+    text-align: left;
 }

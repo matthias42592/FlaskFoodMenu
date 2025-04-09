@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wochenplan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-style.css') }}">
     <style>
         body {
             background-color: #121212;
@@ -30,16 +30,73 @@
             padding: 0;
         }
 
-        .wochenplan-item {
+        .wochen-toggle {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .wochen-toggle button {
+            padding: 10px 20px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .wochen-toggle button:hover {
+            background-color: #666;
+        }
+
+        .kalender-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            width: fit-content;
+            max-width: 1100px;
+            justify-content: center;
+        }
+
+        .kalender-tag {
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 150px;
+        }
+
+        .kalender-tag h3 {
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+
+        .kalender-tag ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .kalender-tag li {
+            background-color: #2b2b2b;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #1e1e1e;
-            padding: 15px;
-            margin: 10px auto;
-            border-radius: 10px;
-            width: 80%;
+            font-size: 0.95em;
         }
+
+        .kalender-tag button {
+            background: none;
+            border: none;
+            color: #ff4444;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+
 
         .wochenplan-info {
             font-size: 1.2em;
@@ -56,46 +113,58 @@
         .delete-button:hover {
             color: #ff7777;
         }
+
+        .striked {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .zurueck-button {
+            text-decoration: none;
+            background-color: #ffa726;
+            color: #121212;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+
+        .zurueck-button:hover {
+            background-color: #ffcc80;
+        }
+
     </style>
 </head>
+
 <body>
+<main>
 
-    <h1>📅 Wochenplan</h1>
-    <a href="/">🔙 Zurück</a>
+    <h1>📅 Wochenplan & Einkaufliste</h1>
+    <nav>
+        <a href="/" class="zurueck-button" id="zurueck-btn">⬅ Zurück</a>
+    </nav>
 
-    <h2>Geplante Gerichte:</h2>
-    <ul id="wochenplan-liste">
-        {% for plan in wochenplan %}
-        <li class="wochenplan-item">
-            <div class="wochenplan-info">
-                <strong>{{ plan.datum }}:</strong> {{ plan.gericht }}
-            </div>
-            <button class="delete-button" onclick="confirmDelete('{{ plan.id }}')">🗑️</button>
-        </li>
-        {% else %}
-        <li>Keine Gerichte im Wochenplan gefunden.</li>
-        {% endfor %}
-    </ul>
+    <div class="wochen-toggle">
+        <button onclick="zeigeWoche('aktuell')">📅 Aktuelle Woche</button>
+        <button onclick="zeigeWoche('naechste')">⏭️ Nächste Woche</button>
+    </div>
+    
+    <div id="wochenplan-kalender" class="kalender-grid"></div>
+    
 
-    <h2>Einkaufsliste:</h2>
-    <ul>
+    <h2>🛒 Einkaufsliste</h2>
+    <ul id="einkaufsliste-liste">
         {% for item in einkaufsliste %}
-        <li class="wochenplan-item">
-            <strong>{{ item.zutat }}:</strong> {{ item.menge }}
+        <li class="einkaufsliste-item" data-id="{{ item.id }}">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" class="einkaufsliste-checkbox">
+                <span class="einkaufsliste-text">{{ item.zutat }}: {{ item.menge }}</span>
+            </label>
         </li>
         {% else %}
         <li>Keine Zutaten in der Einkaufsliste.</li>
         {% endfor %}
-    </ul>
-
-    <h2>Kalenderansicht</h2>
-    <div id="kalender-wochen"></div>
-    
-    <section>
-        <h2>Wochenplan</h2>
-        <div id="kalender-wochen" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 20px;"></div>
-      </section>
-      
+    </ul>           
 
     <script>
         function confirmDelete(gerichtId) {
@@ -114,5 +183,161 @@
         }
     </script>
 
+<script>
+    // Markierte Zutaten im localStorage speichern
+    document.addEventListener("DOMContentLoaded", function () {
+        const items = document.querySelectorAll(".einkaufsliste-item");
+        const checked = JSON.parse(localStorage.getItem("abgehakt") || "[]");
+
+        items.forEach(item => {
+            const id = item.dataset.id;
+            const checkbox = item.querySelector("input[type=checkbox]");
+            const text = item.querySelector(".einkaufsliste-text");
+
+            // Zustand beim Laden setzen
+            if (checked.includes(id)) {
+                checkbox.checked = true;
+                text.classList.add("striked");
+            }
+
+            // Beim Klicken speichern
+            checkbox.addEventListener("change", () => {
+                if (checkbox.checked) {
+                    checked.push(id);
+                    text.classList.add("striked");
+                } else {
+                    const index = checked.indexOf(id);
+                    if (index > -1) checked.splice(index, 1);
+                    text.classList.remove("striked");
+                }
+                localStorage.setItem("abgehakt", JSON.stringify(checked));
+            });
+        });
+    });
+
+    // Vor dem Verlassen fragen ob löschen
+    window.addEventListener("beforeunload", function (e) {
+        const checked = JSON.parse(localStorage.getItem("abgehakt") || "[]");
+        if (checked.length > 0) {
+            const confirmed = confirm("Abgehakte Zutaten entfernen?");
+            if (confirmed) {
+                fetch("/delete_zutat_batch", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ids: checked })
+                }).then(() => localStorage.removeItem("abgehakt"));
+            }
+        }
+    });
+
+    // zurückbutton wochenplan
+    document.addEventListener("DOMContentLoaded", function () {
+    const zurueckBtn = document.getElementById("zurueck-btn");
+
+    zurueckBtn.addEventListener("click", function (e) {
+        const checked = JSON.parse(localStorage.getItem("abgehakt") || "[]");
+
+        if (checked.length > 0) {
+            e.preventDefault(); // blockiere sofortige Weiterleitung
+            const confirmed = confirm("Möchtest du die abgehakten Zutaten aus der Einkaufsliste entfernen?");
+            if (confirmed) {
+                fetch("/delete_zutat_batch", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ids: checked })
+                })
+                .then(() => {
+                    localStorage.removeItem("abgehakt");
+                    window.location.href = "/"; // gehe zur Startseite
+                });
+            } else {
+                window.location.href = "/"; // trotzdem zur Startseite
+            }
+        }
+    });
+});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch("/wochenplan_api")
+            .then(response => response.json())
+            .then(data => {
+                window.alleGerichte = data;  // global speichern
+                zeigeWoche("aktuell");       // Standard: aktuelle Woche
+            });
+    });
+
+    function zeigeWoche(welche) {
+        const kalender = document.getElementById("wochenplan-kalender");
+        kalender.innerHTML = "";
+
+        const heute = new Date();
+        const montag = new Date(heute);
+        const offset = heute.getDay() === 0 ? -6 : 1 - heute.getDay();
+
+        montag.setDate(heute.getDate() + offset + (welche === "naechste" ? 7 : 0));
+
+        const wochentage = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+
+        for (let i = 0; i < 7; i++) {
+            const tagDatum = new Date(montag);
+            tagDatum.setDate(montag.getDate() + i);
+            const isoDatum = tagDatum.toISOString().split("T")[0];
+
+            const tagBox = document.createElement("div");
+            tagBox.className = "kalender-tag";
+
+            const title = document.createElement("h3");
+            title.textContent = wochentage[i];
+            tagBox.appendChild(title);
+
+            const gerichtListe = document.createElement("ul");
+            const gerichteFuerTag = window.alleGerichte.filter(g => g.datum === isoDatum);
+
+            if (gerichteFuerTag.length === 0) {
+                const leer = document.createElement("li");
+                leer.textContent = "–";
+                gerichtListe.appendChild(leer);
+            } else {
+                gerichteFuerTag.forEach(g => {
+                    const li = document.createElement("li");
+
+                    const name = document.createElement("span");
+                    name.textContent = g.gericht;
+
+                    const delBtn = document.createElement("button");
+                    delBtn.innerHTML = "🗑️";
+                    delBtn.onclick = () => loescheGericht(g.id);
+
+                    li.appendChild(name);
+                    li.appendChild(delBtn);
+                    gerichtListe.appendChild(li);
+                });
+            }
+
+            tagBox.appendChild(gerichtListe);
+            kalender.appendChild(tagBox);
+        }
+    }
+
+    function loescheGericht(gerichtId) {
+        fetch(`/delete_from_plan/${gerichtId}?remove_ingredients=true`, {
+            method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();  // Seite neu laden, um den Kalender zu aktualisieren
+        })
+        .catch(error => {
+            console.error("Fehler beim Löschen:", error);
+            alert("Fehler beim Löschen des Gerichts!");
+        });
+    }
+</script>
+
+</main>
 </body>
+
 </html>

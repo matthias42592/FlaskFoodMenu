@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 from firebase_config import database  # Import der Firebase-Verbindung
 from datetime import date
 from collections import defaultdict
+from flask import request, jsonify
 
 print("✅ Firebase-Verbindung importiert")  # ← direkt danach
 
@@ -257,6 +258,26 @@ def delete_zutat(zutat_id):
         return jsonify({"message": "Zutat abgehakt & gelöscht"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Zutaten nach zurück klicken aus Wochenplan löschen
+@app.route("/delete_zutat_batch", methods=["POST"])
+def delete_zutat_batch():
+    data = request.get_json()
+    ids = data.get("ids", [])
+
+    if not ids:
+        return jsonify({"message": "Keine Zutaten-IDs übergeben."}), 400
+
+    deleted = 0
+    for zutat_id in ids:
+        try:
+            print("Lösche Zutat:", zutat_id)
+            database.child("einkaufsliste").child(zutat_id).delete()
+            deleted += 1
+        except Exception as e:
+            print("❌ Fehler bei Zutat:", zutat_id, str(e))
+
+    return jsonify({"message": f"{deleted} Zutaten gelöscht."}), 200
 
 # ---------- 📌 FLASK STARTEN ---------- #
 if __name__ == "__main__":

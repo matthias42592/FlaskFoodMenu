@@ -128,17 +128,42 @@
             color: white;
             border-radius: 5px;
         }
+
+        #fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1e1e1e;
+            z-index: 1000;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        main {
+            /* margin-top: 120px; /* genug Abstand für festen Header */
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>{{ gericht.name }}</h1>
-    <img src="{{ gericht.bild_url or 'https://via.placeholder.com/200' }}" alt="{{ gericht.name }}" width="200">
+    <header id="fixed-header">
+        <a href="/" class="button" style="margin: 10px;">⬅ Zurück</a>
+        <h1>{{ gericht.name }}</h1>
+        <div class="button-container">
+            <button class="button edit-button">✏️ Bearbeiten</button>
+            <button class="button delete-button" onclick="confirmDelete('{{ gericht.id }}')">🗑️ Löschen</button>
+        </div>
+        <a href="/" class="button" style="display: block; margin-top: 20px;">⬅ Zurück</a>
+      </header>
     
-    <div class="button-container">
-        <button class="button edit-button">✏️ Bearbeiten</button>
-        <button class="button delete-button" onclick="confirmDelete('{{ gericht.id }}')">🗑️ Löschen</button>
-    </div>
+      <main>
+        <img src="{{ gericht.bild_url or 'https://via.placeholder.com/200' }}" alt="{{ gericht.name }}" width="200">
     
     <!-- Bearbeitungsformular -->
     <div id="edit-form" class="hidden">
@@ -157,6 +182,7 @@
 
         <button class="button edit-button" onclick="saveChanges('{{ gericht.id }}')">💾 Speichern</button>
     </div>
+    
 
     <div class="zutaten-container">
         <div class="zutaten-block">
@@ -350,9 +376,22 @@ function confirmDelete(gerichtId) {
                 alert("Fehler beim Hinzufügen des Gerichts!");
             });
         }
+
+        
     </script>
+    
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const header = document.getElementById("fixed-header");
+        const main = document.querySelector("main");
 
-<a href="/" class="button" style="display: block; margin-top: 20px;">⬅ Zurück</a>
+        if (header && main) {
+            const headerHeight = header.offsetHeight;
+            main.style.marginTop = `${headerHeight + 20}px`;  // etwas Luft darunter
+        }
+    });
+</script>
 
+</main>
 </body>
 </html>
