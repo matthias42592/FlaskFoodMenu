@@ -55,10 +55,7 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 10px;
             margin: 20px auto;
-            width: fit-content;
-            justify-content: center;
-            max-width: 100%;
-            overflow-x: auto;
+            width: 100%;
             box-sizing: border-box;
             padding: 0 10px;
         }
@@ -136,13 +133,46 @@
             background-color: #ffcc80;
         }
 
+        .einkaufsliste-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 12px 20px;
+            margin: 10px auto;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        .einkaufsliste-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+        }
+
+        .einkaufsliste-text .zutat {
+            flex-grow: 1;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .einkaufsliste-text .menge {
+            text-align: right;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
     </style>
 </head>
 
 <body>
 <main>
 
-    <h1>📅 Wochenplan & Einkaufliste</h1>
+    <h1>📅 Wochenplan & Einkaufsliste</h1>
     <nav>
         <a href="/" class="zurueck-button" id="zurueck-btn">⬅ Zurück</a>
     </nav>
@@ -156,19 +186,40 @@
     
 
     <h2>🛒 Einkaufsliste</h2>
+
+    <div class="manuelle-zutat-box">
+        <h3>Manuell hinzufügen</h3>
+        <input list="produkt-vorschlaege" id="manuell-input" placeholder="Produkt eingeben..." />
+        <datalist id="produkt-vorschlaege">
+            <!-- Wird durch JS mit Vorschlägen aus Firebase gefüllt -->
+        </datalist>
+        <button onclick="addManuellesProdukt()">➕ Hinzufügen</button>
+        <button onclick="zeigeProduktverwaltung()">🛠️ Vorschläge verwalten</button>
+    </div>
+    
+
     <ul id="einkaufsliste-liste">
         {% for item in einkaufsliste %}
         <li class="einkaufsliste-item" data-id="{{ item.id }}">
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                 <input type="checkbox" class="einkaufsliste-checkbox">
-                <span class="einkaufsliste-text">{{ item.zutat }}: {{ item.menge }}</span>
+                <span class="einkaufsliste-text">
+                    <span class="zutat">{{ item.zutat }}</span>
+                    <span class="menge">{{ item.menge }}</span>
+                  </span>                  
+                  
             </label>
         </li>
         {% else %}
         <li>Keine Zutaten in der Einkaufsliste.</li>
         {% endfor %}
-    </ul>           
+    </ul>  
 
+    <div id="vorschlaege-verwalten" style="display: none; margin-top: 20px;">
+        <h3>Gespeicherte Produkte</h3>
+        <ul id="vorschlaege-liste"></ul>
+    </div>
+    
     <script>
         function confirmDelete(gerichtId) {
             let removeIngredients = confirm("Möchtest du dieses Gericht auch aus der Einkaufsliste entfernen?");
@@ -259,6 +310,89 @@
         }
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/produkt_vorschlaege")
+    .then(res => res.json())
+    .then(data => {
+        const datalist = document.getElementById("produkt-vorschlaege");
+        data.forEach(p => {
+            const option = document.createElement("option");
+            option.value = p;
+            datalist.appendChild(option);
+        });
+    });
+});
+
+function addManuellesProdukt() {
+    const input = document.getElementById("manuell-input");
+    const produkt = input.value.trim();
+    if (!produkt) return;
+
+    fetch("/add_manuelles_produkt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zutat: produkt })
+    })
+    .then(res => res.json())
+    .then(data => {
+        input.value = "";
+        location.reload();
+    });
+}
+function zeigeProduktverwaltung() {
+    const container = document.getElementById("vorschlaege-verwalten");
+    const liste = document.getElementById("vorschlaege-liste");
+
+    // Toggle Sichtbarkeit
+    if (container.style.display === "none") {
+        container.style.display = "block";
+
+        // Liste leeren und neu laden
+        liste.innerHTML = "";
+
+        fetch("/produkt_vorschlaege")
+        .then(res => res.json())
+        .then(vorschlaege => {
+            vorschlaege.forEach((eintrag, index) => {
+                const li = document.createElement("li");
+                li.textContent = eintrag;
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "🗑️";
+                delBtn.style.marginLeft = "10px";
+                delBtn.onclick = () => deleteVorschlag(eintrag);
+
+                li.appendChild(delBtn);
+                liste.appendChild(li);
+            });
+        });
+    } else {
+        container.style.display = "none";
+    }
+}
+
+function deleteVorschlag(zutat) {
+    if (!confirm(`Möchtest du "${zutat}" wirklich löschen?`)) return;
+
+    fetch("/delete_vorschlag", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ zutat })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        zeigeProduktverwaltung(); // Neu laden
+    })
+    .catch(err => {
+        console.error("Fehler beim Löschen des Vorschlags:", err);
+        alert("Fehler beim Löschen.");
+    });
+}
+
 </script>
 
 <script>
@@ -281,7 +415,8 @@
 
         montag.setDate(heute.getDate() + offset + (welche === "naechste" ? 7 : 0));
 
-        const wochentage = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+        const wochentage = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
 
         for (let i = 0; i < 7; i++) {
             const tagDatum = new Date(montag);

@@ -30,39 +30,82 @@
             background-color: #666;
         }
 
-        nav a {
-            margin: 0 10px;
-            text-decoration: none;
-            color: #ffcc00;
-            font-weight: bold;
+        nav a,
+            nav a:visited,
+            nav a:hover,
+            nav a:active {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                margin: 0 10px;
         }
+
 
         nav {
             margin-bottom: 20px;
+        }
+
+        #filter-container input,
+        #filter-container select {
+            margin: 5px 0;
+            padding: 5px;
         }
     </style>
 </head>
 <body>
 
-    <h1>🍽 Essensplanung</h1>
+<h1>🍽 Essensplanung</h1>
+
+<main>
 
     <nav>
         <a href="/wochenplan">📆 Wochenplan</a>
         <a href="#add-section">➕ Neues Gericht</a>
+        <a href="javascript:void(0)" onclick="toggleFilter()">🔍 Filtern & Sortieren</a>
     </nav>
 
+        <!-- 🔍 Filter & Sortierbereich -->
+        <div id="filter-container" style="display: none; margin-bottom: 20px;">
+            <label>Sortieren nach:</label>
+            <select id="sortierung">
+                <option value="name">Name (A-Z)</option>
+                <option value="datum">Datum (neueste zuerst)</option>
+            </select>
+
+            <br><br>
+
+            <label>Filtern nach Gerichtname:</label>
+            <input type="text" id="filter-name">
+
+            <label>Hauptzutat enthält:</label>
+            <input type="text" id="filter-hauptzutat">            
+
+            <br><br>
+            <button onclick="anwendenFilter()" class="plus-button">✅ Anwenden</button>
+            <button onclick="zuruecksetzenFilter()" class="plus-button">❌ Zurücksetzen</button>
+        </div>
+
+    </section>
+
+    <!-- 📋 Gerichte-Liste -->
     <div id="gerichte-liste">
         {% for gericht in gerichte %}
-        <a href="/gericht/{{ gericht.id }}" class="gericht-link">
+        <a href="/gericht/{{ gericht.id }}" class="gericht-link" data-index="{{ loop.index }}">
             <div class="gericht">
                 <div class="gericht-info">
                     <div class="gericht-name">{{ gericht.name }}</div>
                     <div class="gericht-zutaten">
-                        {% if gericht.hauptzutaten %}
-                            • {{ gericht.hauptzutaten[0] }}<br>
-                            • {{ gericht.hauptzutaten[1] if gericht.hauptzutaten|length > 1 else '' }}
+                        {% if gericht.hauptzutaten and gericht.haupt_mengen and gericht.haupt_einheiten %}
+                            {% for i in range(gericht.hauptzutaten|length) %}
+                                • {{ gericht.hauptzutaten[i] }} ({{ gericht.haupt_mengen[i] }} {{ gericht.haupt_einheiten[i] }})<br>
+                            {% endfor %}
+                        {% elif gericht.hauptzutaten %}
+                            {% for zutat in gericht.hauptzutaten %}
+                                • {{ zutat }}<br>
+                            {% endfor %}
                         {% endif %}
-                    </div>
+                      </div>
+                      
                 </div>
                 <img class="gericht-bild" src="{{ gericht.bild_url or 'https://via.placeholder.com/80' }}" alt="{{ gericht.name }}">
             </div>
@@ -70,6 +113,7 @@
         {% endfor %}
     </div>
 
+    <!-- ➕ Neues Gericht hinzufügen -->
     <section id="add-section">
         <h2>Neues Gericht hinzufügen</h2>
         <form id="gericht-form">
@@ -77,18 +121,61 @@
             <input type="text" id="name" required><br>
 
             <label>Hauptzutat 1:</label>
-            <input type="text" id="hauptzutat_1" required><br>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="hauptzutat_1_name" placeholder="Name" required>
+              <input type="number" id="hauptzutat_1_menge" placeholder="Menge" required style="width: 80px;">
+              <select id="hauptzutat_1_einheit">
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="ml">ml</option>
+                <option value="l">l</option>
+                <option value="Stück">Stück</option>
+                <option value="TL">TL</option>
+                <option value="EL">EL</option>
+                <option value="Prise">Prise</option>
+                <option value="n.B.">n. B.</option>
+              </select>
+            </div>
+            
 
             <label>Hauptzutat 2:</label>
-            <input type="text" id="hauptzutat_2" required><br>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="hauptzutat_2_name" placeholder="Name" required>
+              <input type="number" id="hauptzutat_2_menge" placeholder="Menge" required style="width: 80px;">
+              <select id="hauptzutat_2_einheit">
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="ml">ml</option>
+                <option value="l">l</option>
+                <option value="Stück">Stück</option>
+                <option value="TL">TL</option>
+                <option value="EL">EL</option>
+                <option value="Prise">Prise</option>
+                <option value="n.B.">n. B.</option>
+              </select>
+            </div>
+            
 
             <label>Nebenzutaten:</label>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="text" id="nebenzutat">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="neben-name" placeholder="Name">
+                <input type="number" id="neben-menge" placeholder="Menge" style="width: 80px;">
+                <select id="neben-einheit">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="l">l</option>
+                    <option value="Stück">Stück</option>
+                    <option value="EL">EL</option>
+                    <option value="TL">TL</option>
+                    <option value="Prise">Prise</option>
+                    <option value="n.B.">n. B.</option>
+                </select>
                 <button type="button" class="plus-button" onclick="addNebenzutat()">➕</button>
             </div>
-
-            <ul id="nebenzutaten-liste"></ul>
+            
+            <div id="nebenzutaten-liste"></div>
+            
 
             <label>Bild-URL:</label>
             <input type="text" id="bild_url"><br>
@@ -98,7 +185,9 @@
         </form>
     </section>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</main>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 </html>

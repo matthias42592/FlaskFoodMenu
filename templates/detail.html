@@ -163,46 +163,53 @@
       </header>
     
       <main>
-        <img src="{{ gericht.bild_url or 'https://via.placeholder.com/200' }}" alt="{{ gericht.name }}" width="200">
-    
-    <!-- Bearbeitungsformular -->
-    <div id="edit-form" class="hidden">
-        <h2>Gericht bearbeiten</h2>
-        <label>Neuer Name:</label>
-        <input type="text" id="edit-name" value="{{ gericht.name }}">
-
-        <label>Bild-URL:</label>
-        <input type="text" id="edit-bild" value="{{ gericht.bild_url }}">
-
-        <label>Hauptzutaten:</label>
-        <textarea id="edit-hauptzutaten">{{ ', '.join(gericht.hauptzutaten) }}</textarea>
-
-        <label>Nebenzutaten:</label>
-        <textarea id="edit-nebenzutaten">{{ ', '.join(gericht.nebenzutaten) }}</textarea>
-
-        <button class="button edit-button" onclick="saveChanges('{{ gericht.id }}')">💾 Speichern</button>
+<!-- Layout: Text links, Bild rechts -->
+<div class="gericht-layout">
+    <div class="gericht-text">
+      <!-- Bearbeitungsformular -->
+      <div id="edit-form" class="hidden">
+          <h2>Gericht bearbeiten</h2>
+          <label>Neuer Name:</label>
+          <input type="text" id="edit-name" value="{{ gericht.name }}">
+  
+          <label>Bild-URL:</label>
+          <input type="text" id="edit-bild" value="{{ gericht.bild_url }}">
+  
+          <label>Hauptzutaten:</label>
+          <textarea id="edit-hauptzutaten">{{ ', '.join(gericht.hauptzutaten) }}</textarea>
+  
+          <label>Nebenzutaten:</label>
+          <textarea id="edit-nebenzutaten">{{ ', '.join(gericht.nebenzutaten) }}</textarea>
+  
+          <button class="button edit-button" onclick="saveChanges('{{ gericht.id }}')">💾 Speichern</button>
+      </div>
+  
+      <div class="zutaten-container">
+          <div class="zutaten-block">
+              <h2>Hauptzutaten</h2>
+              <ul>
+                  {% for zutat in gericht.hauptzutaten %}
+                      <li>{{ zutat }}</li>
+                  {% endfor %}
+              </ul>
+          </div>
+  
+          <div class="zutaten-block">
+              <h2>Nebenzutaten</h2>
+              <ul>
+                  {% for zutat in gericht.nebenzutaten %}
+                      <li>{{ zutat }}</li>
+                  {% endfor %}
+              </ul>
+          </div>
+      </div>
     </div>
-    
-
-    <div class="zutaten-container">
-        <div class="zutaten-block">
-            <h2>Hauptzutaten</h2>
-            <ul>
-                {% for zutat in gericht.hauptzutaten %}
-                    <li>{{ zutat }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="zutaten-block">
-            <h2>Nebenzutaten</h2>
-            <ul>
-                {% for zutat in gericht.nebenzutaten %}
-                    <li>{{ zutat }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+  
+    <!-- Bild rechts -->
+    <img src="{{ gericht.bild_url or 'https://via.placeholder.com/400x250' }}"
+         alt="{{ gericht.name }}"
+         class="gericht-bild-gross">
+  </div>
 
     <h2>Zum Wochenplan hinzufügen</h2>
     <div id="kalender-container">
@@ -217,6 +224,7 @@
                 renderKalender(data);
             });
         });
+  
 
 function renderKalender(wochenplan) {
     const kalender = document.getElementById("kalender-wochen");
@@ -345,49 +353,49 @@ function confirmDelete(gerichtId) {
     }
 }
 
-        // Gericht zum Wochenplan hinzufügen
-        function addToPlan(date) {
-            console.log("Füge Gericht hinzu:", date);
-            
-            const gerichtName = "{{ gericht.name }}"; // Gerichtname aus Template
-            const datum = date; // Datum des Klicks
+    // Gericht zum Wochenplan hinzufügen
+    function addToPlan(date) {
+        console.log("Füge Gericht hinzu:", date);
+        
+        const gerichtName = "{{ gericht.name }}";
+        const datum = date;
 
-            // Hier wird die POST-Anfrage an die Flask-Route gesendet
-            fetch("/add_to_plan", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+        fetch("/add_to_plan", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({
-                id: "{{ gericht.id }}",  // ✅ übergebe die ID
+                id: "{{ gericht.id }}",
                 datum: datum,
                 gericht: gerichtName,
-                hauptzutaten: {{ gericht.hauptzutaten | tojson }},
-                nebenzutaten: {{ gericht.nebenzutaten | tojson }}
+                hauptzutaten: {{ gericht.hauptzutaten | default([]) | tojson }},
+                haupt_mengen: {{ gericht.haupt_mengen | default([]) | tojson }},
+                haupt_einheiten: {{ gericht.haupt_einheiten | default([]) | tojson }},
+                nebenzutaten: {{ gericht.nebenzutaten | default([]) | tojson }},
+                neben_mengen: {{ gericht.neben_mengen | default([]) | tojson }},
+                neben_einheiten: {{ gericht.neben_einheiten | default([]) | tojson }}
             }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Gericht hinzugefügt:", data);
-                alert("Gericht zum Wochenplan hinzugefügt!");
-            })
-            .catch(error => {
-                console.error("Fehler beim Hinzufügen zum Wochenplan:", error);
-                alert("Fehler beim Hinzufügen des Gerichts!");
-            });
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Gericht hinzugefügt:", data);
+            alert("Gericht zum Wochenplan hinzugefügt!");
+        })
+        .catch(error => {
+            console.error("Fehler beim Hinzufügen zum Wochenplan:", error);
+            alert("Fehler beim Hinzufügen des Gerichts!");
+        });
+    }
 
-        
-    </script>
-    
-<script>
+    // Nachträgliches Anpassen des Abstands zum Header
     document.addEventListener("DOMContentLoaded", function () {
         const header = document.getElementById("fixed-header");
         const main = document.querySelector("main");
 
         if (header && main) {
             const headerHeight = header.offsetHeight;
-            main.style.marginTop = `${headerHeight + 20}px`;  // etwas Luft darunter
+            main.style.marginTop = `${headerHeight + 20}px`;
         }
     });
 </script>

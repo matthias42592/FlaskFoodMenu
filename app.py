@@ -135,55 +135,69 @@ from firebase_config import database
 def add_to_plan():
     data = request.json
     if data:
-        # ✅ Gericht-ID aus dem Request holen
         gericht_id = data.get("id")
 
-        # ✅ Daten zum Speichern aufbereiten – inklusive gericht_id!
         data_to_save = {
             "datum": data["datum"],
             "gericht": data["gericht"],
             "hauptzutaten": data.get("hauptzutaten", []),
             "nebenzutaten": data.get("nebenzutaten", []),
-            "gericht_id": gericht_id  # ← das ist neu
+            "gericht_id": gericht_id
         }
 
-        neues_gericht = database.child("wochenplan").push(data_to_save)
-        print("Neues Gericht zum Wochenplan hinzugefügt:", neues_gericht)
+        database.child("wochenplan").push(data_to_save)
+        print("Neues Gericht zum Wochenplan hinzugefügt")
 
-        # Zutaten zur Einkaufsliste hinzufügen mit Mengenaggregation
-        einkaufs_dict = defaultdict(int)
+        # 🔄 Mengenbasiertes Dictionary: {(zutat, einheit): menge}
+        zutaten_mengen = defaultdict(float)
 
-        if isinstance(data.get("hauptzutaten"), list):
-            for zutat in data["hauptzutaten"]:
-                if zutat:
-                    einkaufs_dict[zutat] += 1
+        # Verarbeite Hauptzutaten
+        for name, menge, einheit in zip(
+            data.get("hauptzutaten", []),
+            data.get("haupt_mengen", []),
+            data.get("haupt_einheiten", [])
+        ):
+            if name and menge and einheit:
+                try:
+                    zutaten_mengen[(name, einheit)] += float(menge)
+                except ValueError:
+                    print(f"⚠️ Ungültige Menge bei Hauptzutat: {name} → {menge}")
 
-        if isinstance(data.get("nebenzutaten"), list):
-            for zutat in data["nebenzutaten"]:
-                if zutat:
-                    einkaufs_dict[zutat] += 1
+        # Verarbeite Nebenzutaten
+        for name, menge, einheit in zip(
+            data.get("nebenzutaten", []),
+            data.get("neben_mengen", []),
+            data.get("neben_einheiten", [])
+        ):
+            if name and menge and einheit:
+                try:
+                    zutaten_mengen[(name, einheit)] += float(menge)
+                except ValueError:
+                    print(f"⚠️ Ungültige Menge bei Nebenzutat: {name} → {menge}")
 
-        # Vorhandene Einkaufsliste abrufen und Mengen aktualisieren
+        # Bestehende Einkaufsliste abrufen
         einkauf_ref = database.child("einkaufsliste").get()
-
         if einkauf_ref:
             for key, item in einkauf_ref.items():
-                vorhandene_zutat = item["zutat"]
-                if vorhandene_zutat in einkaufs_dict:
-                    menge_str = item.get("menge", "1 Stück")
-                    menge = int(menge_str.split()[0])
-                    neue_menge = menge + einkaufs_dict[vorhandene_zutat]
-                    database.child("einkaufsliste").child(key).update({"menge": f"{neue_menge} Stück"})
-                    del einkaufs_dict[vorhandene_zutat]
+                name = item.get("zutat")
+                menge_str = item.get("menge", "0 Stück")
+                einheit = menge_str.split(maxsplit=1)[1] if " " in menge_str else "Stück"
+                try:
+                    menge = float(menge_str.split()[0])
+                    zutaten_mengen[(name, einheit)] += menge
+                    database.child("einkaufsliste").child(key).delete()  # löschen, wird neu geschrieben
+                except Exception as e:
+                    print(f"⚠️ Fehler beim Parsen existierender Menge: {menge_str} → {e}")
 
-        # Neue Zutaten hinzufügen
-        for zutat, menge in einkaufs_dict.items():
-            database.child("einkaufsliste").push({"zutat": zutat, "menge": f"{menge} Stück"})
+        # Neue Einkaufsliste schreiben
+        for (name, einheit), menge in zutaten_mengen.items():
+            menge_gerundet = round(menge, 2)
+            database.child("einkaufsliste").push({
+                "zutat": name,
+                "menge": f"{menge_gerundet} {einheit}"
+            })
 
     return jsonify({"message": "Gericht hinzugefügt und Zutaten zur Einkaufsliste ergänzt!"}), 201
-
-
-
 
 # Gericht aus dem Wochenplan löschen
 @app.route("/delete_from_plan/<gericht_id>", methods=["DELETE"])
@@ -278,6 +292,47 @@ def delete_zutat_batch():
             print("❌ Fehler bei Zutat:", zutat_id, str(e))
 
     return jsonify({"message": f"{deleted} Zutaten gelöscht."}), 200
+
+# manuelle produkte in einkaufliste hinzufügen
+@app.route("/produkt_vorschlaege")
+def produkt_vorschlaege():
+    ref = database.child("produkt_vorschlaege").get()
+    vorschlaege = list(ref.values()) if ref else []
+    return jsonify(vorschlaege)
+
+
+@app.route("/add_manuelles_produkt", methods=["POST"])
+def add_manuelles_produkt():
+    data = request.get_json()
+    zutat = data.get("zutat", "").strip()
+    if not zutat:
+        return jsonify({"error": "Keine Zutat übergeben"}), 400
+
+    # Prüfe, ob schon in den Vorschlägen
+    ref = database.child("produkt_vorschlaege").get()
+    if not ref or zutat not in ref.values():
+        database.child("produkt_vorschlaege").push(zutat)
+
+    # Zur Einkaufsliste hinzufügen
+    database.child("einkaufsliste").push({"zutat": zutat, "menge": "1 Stück"})
+    return jsonify({"message": "Produkt gespeichert"}), 201
+
+#lösche manuellen produkt eintrag
+@app.route("/delete_vorschlag", methods=["POST"])
+def delete_vorschlag():
+    data = request.get_json()
+    zutat = data.get("zutat")
+    ref = database.child("produkt_vorschlaege").get()
+
+    if not ref:
+        return jsonify({"error": "Keine Vorschläge gefunden"}), 404
+
+    for key, value in ref.items():
+        if value == zutat:
+            database.child("produkt_vorschlaege").child(key).delete()
+            return jsonify({"message": f'"{zutat}" wurde gelöscht.'})
+
+    return jsonify({"error": "Zutat nicht gefunden"}), 404
 
 # ---------- 📌 FLASK STARTEN ---------- #
 if __name__ == "__main__":

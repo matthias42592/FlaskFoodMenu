@@ -16,46 +16,52 @@ h1 {
     top: 0;
     left: 0;
     width: 100%;
-    background-color: #1e1e1e; /* Hintergrundfarbe passend zum Dark Mode */
-    color: #ffa726; /* Orange als Akzentfarbe */
+    background-color: #1e1e1e;
+    color: #ffa726;
     text-align: center;
     font-size: 2.4rem;
     letter-spacing: 1px;
     padding: 10px 0;
     margin: 0;
-    z-index: 1000; /* Sicherstellen, dass es über anderen Elementen bleibt */
+    z-index: 1000;
 }
 
 /* Navigation fixieren */
 nav {
     position: fixed;
-    top: 60px; /* Direkt unter der Überschrift */
+    top: 60px;
     left: 0;
     width: 100%;
-    background-color: #1e1e1e; /* Hintergrundfarbe passend zum Dark Mode */
+    background-color: #1e1e1e;
     display: flex;
     justify-content: center;
     gap: 15px;
     padding: 10px 0;
-    z-index: 999; /* Sicherstellen, dass es über anderen Elementen bleibt */
+    z-index: 999;
 }
 
 /* Links in der Navigation */
-nav a {
+nav a,
+nav a:visited,
+nav a:hover,
+nav a:active {
     text-decoration: none;
-    background-color: #ffa726; /* Orange als Akzentfarbe */
-    color: #121212; /* Kontrastreiche Schriftfarbe */
+    background-color: #ffa726;
+    color: white;
     padding: 10px 15px;
     border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
 }
 
+
 nav a:hover {
-    background-color: #ffcc80; /* Hellere Orange beim Hover */
+    background-color: #ffcc80;
 }
 
 /* Abstand für den Hauptinhalt (wegen fixierter Überschrift und Navigation) */
 main {
-    margin-top: 120px; /* Platz für Überschrift und Navigation */
+    margin-top: 120px;
 }
 
 /* Gericht-Karte */
@@ -93,6 +99,29 @@ main {
     object-fit: cover;
 }
 
+/* 🆕 Gericht-Detail-Layout: Text links, Bild rechts */
+.gericht-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: nowrap; /* verhindert Umbruch */
+}
+
+.gericht-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.gericht-bild-gross {
+    width: 300px;
+    max-width: 30vw; /* skaliert auf kleineren Screens */
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    object-fit: cover;
+}
+
 /* Formular Styling */
 #gericht-form {
     display: flex;
@@ -115,7 +144,7 @@ main {
 
 /* Nebenzutaten Liste */
 #nebenzutaten-liste {
-    list-style-type: none; /* Keine Bulletpoints */
+    list-style-type: none;
 }
 
 /* Kalender */
@@ -124,11 +153,20 @@ main {
 }
 
 .kalender-tag {
-   text-align:center
+    text-align: center;
 }
 
 #einkaufsliste-liste {
     margin: 0 auto;
     max-width: 600px;
     text-align: left;
+}
+
+/* 🔧 Link-Farben global überschreiben */
+a,
+a:visited,
+a:hover,
+a:active {
+    color: white;
+    text-decoration: none;
 }
