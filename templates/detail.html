@@ -148,12 +148,36 @@
             /* margin-top: 120px; /* genug Abstand für festen Header */
         }
 
+        @media (max-width: 600px) {
+    #fixed-header {
+        padding: 12px 10px;
+        gap: 6px;
+    }
+
+    .button-container {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .button-container .button {
+        width: 90%;
+        font-size: 1rem;
+    }
+
+    #fixed-header h1 {
+        font-size: 1.4em;
+        word-break: break-word;
+        padding: 0 10px;
+    }
+}
+
+
     </style>
 </head>
 <body>
 
     <header id="fixed-header">
-        <a href="/" class="button" style="margin: 10px;">⬅ Zurück</a>
+        
         <h1>{{ gericht.name }}</h1>
         <div class="button-container">
             <button class="button edit-button">✏️ Bearbeiten</button>
