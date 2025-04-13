@@ -77,12 +77,16 @@ def add_gericht():
     data = request.json
     neues_gericht = {
         "name": data["name"],
-        "hauptzutaten": data["hauptzutaten"],  
-        "nebenzutaten": data["nebenzutaten"],  
-        "bild_url": data["bild_url"]
+        "bild_url": data["bild_url"],
+        "hauptzutaten": data.get("hauptzutaten", []),
+        "haupt_mengen": data.get("haupt_mengen", []),
+        "haupt_einheiten": data.get("haupt_einheiten", []),
+        "nebenzutaten": data.get("nebenzutaten", []),
+        "neben_mengen": data.get("neben_mengen", []),
+        "neben_einheiten": data.get("neben_einheiten", [])
     }
     gericht_id = database.child("gerichte").push(neues_gericht)
-    return jsonify({"message": "Gericht hinzugefügt", "id": gericht_id.key}), 201
+    return jsonify({"message": "Gericht hinzugefügt", "id": gericht_id["name"]}), 201
 
 # Gericht aus der Datenbank bearbeiten (POST)
 @app.route("/edit_gericht/<gericht_id>", methods=["POST"])
@@ -96,8 +100,18 @@ def edit_gericht(gericht_id):
         "name": data.get("name"),
         "bild_url": data.get("bild_url"),
         "hauptzutaten": data.get("hauptzutaten", []),
-        "nebenzutaten": data.get("nebenzutaten", [])
+        "haupt_mengen": data.get("haupt_mengen", []),
+        "haupt_einheiten": data.get("haupt_einheiten", []),
+        "nebenzutaten": data.get("nebenzutaten", []),
+        "neben_mengen": data.get("neben_mengen", []),
+        "neben_einheiten": data.get("neben_einheiten", [])
     }
+
+    try:
+        database.child("gerichte").child(gericht_id).update(update_data)
+        return jsonify({"message": "Gericht erfolgreich aktualisiert!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     # Gericht in Firebase aktualisieren
     database.child("gerichte").child(gericht_id).update(update_data)

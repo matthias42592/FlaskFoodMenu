@@ -192,21 +192,36 @@
     <div class="gericht-text">
       <!-- Bearbeitungsformular -->
       <div id="edit-form" class="hidden">
-          <h2>Gericht bearbeiten</h2>
-          <label>Neuer Name:</label>
-          <input type="text" id="edit-name" value="{{ gericht.name }}">
-  
-          <label>Bild-URL:</label>
-          <input type="text" id="edit-bild" value="{{ gericht.bild_url }}">
-  
-          <label>Hauptzutaten:</label>
-          <textarea id="edit-hauptzutaten">{{ ', '.join(gericht.hauptzutaten) }}</textarea>
-  
-          <label>Nebenzutaten:</label>
-          <textarea id="edit-nebenzutaten">{{ ', '.join(gericht.nebenzutaten) }}</textarea>
-  
-          <button class="button edit-button" onclick="saveChanges('{{ gericht.id }}')">💾 Speichern</button>
-      </div>
+        <h2>Gericht bearbeiten</h2>
+    
+        <label>Neuer Name:</label>
+        <input type="text" id="edit-name" value="{{ gericht.name }}">
+    
+        <label>Bild-URL:</label>
+        <input type="text" id="edit-bild" value="{{ gericht.bild_url }}">
+    
+        <h3>Hauptzutaten</h3>
+        {% for i in range(2) %}
+        <div>
+            <input type="text" id="edit-hauptzutat-name-{{i}}" placeholder="Name" value="{{ gericht.hauptzutaten[i] }}">
+            <input type="number" id="edit-hauptzutat-menge-{{i}}" placeholder="Menge" value="{{ gericht.haupt_mengen[i] }}">
+            <input type="text" id="edit-hauptzutat-einheit-{{i}}" placeholder="Einheit" value="{{ gericht.haupt_einheiten[i] }}">
+        </div>
+        {% endfor %}
+    
+        <h3>Nebenzutaten</h3>
+        <div id="edit-nebenzutaten-container">
+            {% for i in range(gericht.nebenzutaten|length) %}
+            <div class="neben-edit-block">
+                <input type="text" class="edit-neben-name" value="{{ gericht.nebenzutaten[i] }}">
+                <input type="number" class="edit-neben-menge" value="{{ gericht.neben_mengen[i] }}">
+                <input type="text" class="edit-neben-einheit" value="{{ gericht.neben_einheiten[i] }}">
+            </div>
+            {% endfor %}
+        </div>
+    
+        <button onclick="saveChanges('{{ gericht.id }}')" class="button edit-button">💾 Speichern</button>
+    </div>
   
       <div class="zutaten-container">
           <div class="zutaten-block">

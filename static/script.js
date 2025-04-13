@@ -217,23 +217,34 @@ function toggleEdit() {
 }
 
 function saveChanges(gerichtId) {
-    const name = document.getElementById("edit-name").value.trim();
-    const bild = document.getElementById("edit-bild").value.trim();
-    const hauptzutaten = document.getElementById("edit-hauptzutaten").value.split(",").map(z => z.trim());
-    const nebenzutaten = document.getElementById("edit-nebenzutaten").value.split(",").map(z => z.trim());
+    const name = document.getElementById("edit-name").value;
+    const bild = document.getElementById("edit-bild").value;
+
+    const hauptzutaten = [0, 1].map(i => document.getElementById(`edit-hauptzutat-name-${i}`).value);
+    const haupt_mengen = [0, 1].map(i => parseFloat(document.getElementById(`edit-hauptzutat-menge-${i}`).value));
+    const haupt_einheiten = [0, 1].map(i => document.getElementById(`edit-hauptzutat-einheit-${i}`).value);
+
+    const nebenblocks = document.querySelectorAll(".neben-edit-block");
+    const nebenzutaten = [], neben_mengen = [], neben_einheiten = [];
+    nebenblocks.forEach(block => {
+        nebenzutaten.push(block.querySelector(".edit-neben-name").value);
+        neben_mengen.push(parseFloat(block.querySelector(".edit-neben-menge").value));
+        neben_einheiten.push(block.querySelector(".edit-neben-einheit").value);
+    });
 
     fetch(`/edit_gericht/${gerichtId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, bild_url: bild, hauptzutaten, nebenzutaten })
+        body: JSON.stringify({
+            name, bild_url: bild,
+            hauptzutaten, haupt_mengen, haupt_einheiten,
+            nebenzutaten, neben_mengen, neben_einheiten
+        })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-        alert(data.message);
-        window.location.href = "/";
-    })
-    .catch(error => {
-        console.error("Fehler beim Speichern:", error);
+        alert(data.message || "Gericht aktualisiert.");
+        location.reload();
     });
 }
 
